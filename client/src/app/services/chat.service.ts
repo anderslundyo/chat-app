@@ -59,7 +59,7 @@ export class ChatService {
   //Create observable of chatrooms. Makes us subscribe to it from the component and update with new data
   getAllChatrooms(): Observable<Chatroom[]>{
     const observableChatrooms = new Observable<Chatroom[]>(observer => {
-      this.socket.on('refresh chatrooms', (refresh) => {
+      this.socket.on('reload rooms', (refresh) => {
         observer.next(refresh);
       });
 

@@ -16,9 +16,9 @@ router.post('/send-message', (req, res, next) => {
 
     message.addMessage(newMsg, (err, msg) => {
         if(err){
-            res.json({success: false, msg: 'Failed to save message'});
+            res.json({success: false, msg: 'Failed at saving the message'});
         } else{
-            res.json({success: true, msg: 'Message saved'});
+            res.json({success: true, msg: 'Message was successfully saved'});
             router.notifyclients(newMsg.chatroom);
         }
     })
@@ -31,27 +31,27 @@ router.post('/new-room', (req, res, next) => {
 
     Chatroom.addChatroom(newRoom, (err, msg) => {
         if(err){
-            res.json({success: false, msg: 'Failed to create new room'});
+            res.json({success: false, msg: 'Failed at creating a new room'});
         } else{
-            res.json({success: true, msg: Chatroom.roomname+ ' has been created'});
+            res.json({success: true, msg: Chatroom.roomname+ ' was created'});
             router.notifyClientsRooms();
         }
     })
 });
 //How many sockets is connected on connect
-router.clients = [];
-router.addClient = function (client) {
-    router.clients.push(client);
+router.allSockets = [];
+router.addSocket = function (client) {
     router.notifyclients(client);
-    console.log('Connected: %s sockets connected', router.clients.length);
+    router.clients.push(client);
+    console.log('Connected: %s are now connected', router.clients.length);
 };
 // Notify users about the new message
-router.clients = [];
-router.addClient = function (client) {
-    router.clients.push(client);
-    router.notifyclients(client);
+router.allSockets = [];
+router.addSocket = function (socket) {
+    router.allSockets.push(socket);
+    router.notifyclients(socket);
 };
-// Notifyclients about new msg
+// Notifyclients about new msg. Is called whenever a new message is created
 router.notifyclients = function (currentRoom) {
     message.find({chatroom: currentRoom}).exec(function (err, message) {
         if (err)
@@ -60,21 +60,22 @@ router.notifyclients = function (currentRoom) {
         })
     };
 
-// Notifyclients about new room
+// Notifies clients about a new room. Is called whenever a new room is created
 router.notifyClientsRooms = function () {
-    Chatroom.find({}).exec(function (err, rooms) {
+    Chatroom.find({}).exec(function (err, chatrooms) {
         if (err)
             return console.error(err);
 
-        router.clients.forEach(function(socket){
-            socket.emit('refresh chatrooms', rooms);
+        router.allSockets.forEach(function(socket){
+            socket.emit('reload rooms', chatrooms);
         })
     });
 };
-//How many sockets are connected on disconnect
-router.disconnectClient = (client) => {
-    router.clients.splice(router.clients.indexOf(client), 1);
-    console.log('Disconnected: %s sockets connected', router.clients.length);
+//Count sockets that are connected
+router.disconnectSocket = (user) => {
+    router.allSockets.splice(router.allSockets.indexOf(user), 1);
+    console.log('Disconnected: %s sockets connected', router.allSockets.length);
 };
+
 //export the router
 module.exports = router;

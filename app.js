@@ -1,59 +1,62 @@
 const debug = require('debug')('MEAN2:server');
 const express = require('express');
 const http = require('http');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 const app = express();
 const path = require('path');
-const bodyParser = require('body-parser');
 const passport = require('passport');
 const config = require('./config/database');
-const mongoose = require('mongoose');
 
-//Create HTTP server
+//creates server
 const server = http.createServer(app);
 const io = require('socket.io').listen(server);
 
-// Export io to be used in router
+// Export so we can use it later
 module.exports = io;
 
 //View Engine
 app.engine('ejs', require('ejs').renderFile);
 app.set('view engine', 'ejs');
 
-// Connect to database
+// Gets our database connection on localhost
 mongoose.connect(config.database);
 
-// On connection
+//Connection successfull message
 mongoose.connection.on('connected', () =>{
-    console.log("Connected to database " + config.database);
+    console.log("Database connection established " + config.database);
 });
 
 // On error
-mongoose.connection.on('error', (err) =>{
-    console.log("Database error: " + err);
+mongoose.connection.on('error', (error) =>{
+    console.log("Error when trying to connect to databse: " + error);
 });
 
+//Use bodyparser to get inputs from client
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Passport middleware
+// We need to use passport to create a user, and a connection
 app.use(passport.initialize());
 app.use(passport.session());
 
 require('./config/passport')(passport);
 
+//Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+
 /** Get port from environment and store in Express. */
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-// Anything that accesses the /users will be using the /routes/users file
-const users = require('./routes/users');
-const chat = require('./routes/chat');
-app.use('/users', users);
-app.use('/chat', chat);
+// Create routes for requests
+const u = require('./routes/users');
+app.use('/users', u);
+const c = require('./routes/chat');
+app.use('/chat', c);
 
-//hello
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     const err = new Error('Not Found');
@@ -79,32 +82,29 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('connect to chat', (nickname) => {
         socket.nickname = nickname;
-        chat.addClient(socket);
+        chat.addSocket(socket);
         chat.notifyClientsRooms();
     });
-    //Room stuff starts here
+
+    //Chatroom information
     let currentRoom = '';
 
-    socket.on('current room', (data) =>{
-        currentRoom = data;
-        console.log("Current room on the server is: " + data);
+    socket.on('current room', (room) =>{
+        currentRoom = room;
+        console.log("You've moved to: " + room);
         chat.notifyclients(currentRoom);
     });
 
-    socket.on('change room', function(data){
+    socket.on('change room', function(newRoom){
         socket.leave(currentRoom, null);
-        currentRoom = data;
-        socket.join(data);
+        currentRoom = newRoom;
+        socket.join(newRoom);
     });
 
-    socket.on('disconnect user', function(){
-        // console.log("disconnected");
-        chat.disconnectClient(socket);
-    });
 
     socket.on('disconnect', function(){
         console.log("disconnected");
-        chat.disconnectClient(socket)
+        chat.disconnectSocket(socket)
     });
 });
 server.on('listening', onListening);

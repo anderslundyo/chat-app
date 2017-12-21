@@ -11,24 +11,28 @@ import { Chatroom } from '../../models/chatroom';
   providers: [ChatService]
 })
 export class ChatComponent implements OnInit {
-  name: String = JSON.parse(localStorage.getItem('user')).name;
   username: String;
   message: String;
   roomName: String;
-  currentRoom = '1';
+
+  //Get username from session storage
+  name: String = JSON.parse(localStorage.getItem('user')).username;
+
+  currentRoom = 'Generel';
   public chatMessages = [];
   public chatrooms = [];
 
   constructor(
-    private activatedRoute: ActivatedRoute,
+    private route: ActivatedRoute,
     private chatService: ChatService,
     private router: Router
   ) { }
 
   ngOnInit() {
     // Set the current room
-    this.activatedRoute.params.subscribe((params: Params) => {
+    this.route.params.subscribe((params: Params) => {
       if (params['currentRoom']) {
+        //Checks current room and sets it
         this.currentRoom = params['currentRoom'];
         console.log('current room is: ', this.currentRoom);
       }
@@ -68,7 +72,7 @@ export class ChatComponent implements OnInit {
   }
 
 
-  // Chatroom stuff goes here
+  //Create a new chatroom
   createNewRoom() {
     console.log('input was: ' +this.roomName);
     const newRoom: Chatroom = {
@@ -77,17 +81,17 @@ export class ChatComponent implements OnInit {
     this.chatService.createNewRoom(newRoom).subscribe();
   }
 
-    //Get all messages in current room
-    getMsgInRoom(roomName) {
-      this.chatService.getMsgInRoom(roomName)
-        .subscribe(
-          messages => {
-            this.chatMessages = messages;
-          }
-        );
-    }
+  //Get all messages in current room
+  getMsgInRoom(roomName) {
+    this.chatService.getMsgInRoom(roomName)
+      .subscribe(
+        messages => {
+          this.chatMessages = messages;
+        }
+      );
+  }
 
-    
+  //Find all chatrooms
   getAllChatrooms() {
     this.chatService.getAllChatrooms()
       .subscribe(

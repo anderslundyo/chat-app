@@ -156,7 +156,7 @@ module.exports = module.exports.toString();
 /***/ "../../../../../src/app/components/chat/chat.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-fluid\">\n  <div class=\"row\">\n<h2>Chat messages</h2>\n<ul>\n  <li *ngFor=\"let message of chatMessages\">\n    {{message.name}} : \"{{message.message}}\"\n  </li>\n</ul>\n<form (submit)=\"submitMessage()\">\n  <div class=\"form-group col-md-8\">\n    <label for=\"body\">Type message below</label>\n    <input type=\"text\" class=\"form-control\" id=\"body\"\n           required\n           [(ngModel)]=\"message\" name=\"message\">\n  </div>\n  <button type=\"submit\" class=\"btn btn-default\">Submit</button>\n</form>\n<hr>\n\n<div class=\"right-sidebar col-md-4\">\n  <h5>Chatrooms</h5>\n  <ul class=\"chatrooms\">\n    <li *ngFor=\"let chatroom of chatrooms\">\n      <a [routerLink]=\"['/chat',chatroom.roomname]\" routerLinkActive=\"active\" (click)=\"changeRoom(chatroom.roomname)\">{{chatroom.roomname}}</a>\n    </li>\n  </ul>\n  <hr>\n\n  <form (submit)=\"createNewRoom()\">\n    <div class=\"form-group\">\n      <label>New Room</label>\n      <input type=\"text\" [(ngModel)]=\"roomName\" name=\"roomName\" class=\"form-control\">\n    </div>\n    <input type=\"submit\" class=\"btn btn-primary\" value=\"create room\">\n  </form>\n</div>\n  </div>\n</div>\n"
+module.exports = "<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col-sm-8\">\n<h2 class=\"chat-header\">You're now in {{currentRoom}} chatroom</h2>\n<div class=\"message-container\">\n  <div class=\"inner-container\">  \n  <p *ngFor=\"let msg of chatMessages\" class=\"single-message\">\n    <span class=\"timestamp\">{{msg.createdOn | date: 'HH:mm:ss'}}</span> {{msg.name}} : {{msg.message}}\n  </p>\n</div>\n</div>\n<form (submit)=\"submitMessage()\">\n  <div class=\"form-group submit-message col-md-8\">\n    <label for=\"body\">New message</label>\n    <input type=\"text\" class=\"form-control\"\n           required\n           [(ngModel)]=\"message\" name=\"message\">\n  <button type=\"submit\" class=\"btn btn-default\">Submit</button>\n  </div>\n  \n</form>\n\n</div>\n<hr>\n\n<div class=\"col-sm-4\">\n  <h3>Change chatroom</h3>\n  <ul class=\"chatrooms\">\n    <li *ngFor=\"let room of chatrooms\">\n      <a [routerLink]=\"['/chat',room.roomname]\" routerLinkActive=\"active\" (click)=\"changeRoom(room.roomname)\">{{room.roomname}}</a>\n    </li>\n  </ul>\n  <hr>\n\n  <form (submit)=\"createNewRoom()\">\n    <div class=\"form-group\">\n      <label>New chatroom</label>\n      <input type=\"text\" [(ngModel)]=\"roomName\" name=\"roomName\" class=\"form-control\">\n    </div>\n    <input type=\"submit\" class=\"btn-primary btn \" value=\"New room\">\n  </form>\n</div>\n  </div> <!-- row end -->\n</div>\n"
 
 /***/ }),
 
@@ -181,20 +181,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 var ChatComponent = (function () {
-    function ChatComponent(activatedRoute, chatService, router) {
-        this.activatedRoute = activatedRoute;
+    function ChatComponent(route, chatService, router) {
+        this.route = route;
         this.chatService = chatService;
         this.router = router;
-        this.name = JSON.parse(localStorage.getItem('user')).name;
-        this.currentRoom = '1';
+        //Get username from session storage
+        this.name = JSON.parse(localStorage.getItem('user')).username;
+        this.currentRoom = 'Generel';
         this.chatMessages = [];
         this.chatrooms = [];
     }
     ChatComponent.prototype.ngOnInit = function () {
         var _this = this;
         // Set the current room
-        this.activatedRoute.params.subscribe(function (params) {
+        this.route.params.subscribe(function (params) {
             if (params['currentRoom']) {
+                //Checks current room and sets it
                 _this.currentRoom = params['currentRoom'];
                 console.log('current room is: ', _this.currentRoom);
             }
@@ -229,7 +231,7 @@ var ChatComponent = (function () {
         console.log(this.name + " send a new message");
         this.chatService.submitMessage(newMessage).subscribe();
     };
-    // Chatroom stuff goes here
+    //Create a new chatroom
     ChatComponent.prototype.createNewRoom = function () {
         console.log('input was: ' + this.roomName);
         var newRoom = {
@@ -245,6 +247,7 @@ var ChatComponent = (function () {
             _this.chatMessages = messages;
         });
     };
+    //Find all chatrooms
     ChatComponent.prototype.getAllChatrooms = function () {
         var _this = this;
         this.chatService.getAllChatrooms()
@@ -290,7 +293,7 @@ module.exports = module.exports.toString();
 /***/ "../../../../../src/app/components/home/home.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container\">\n<div class=\"jumbotron text-center\">\n  <h1>Welcome online!</h1>\n  <h3>What would you like to do?</h3>\n  <div>\n      <hr>\n    <a class=\"btn-primary btn\" [routerLink]=\"['/register']\">Create new user</a> <a class=\"btn-default btn\" [routerLink]=\"['/login']\">Login</a>\n  </div>\n</div>\n</div>"
+module.exports = "<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col-sm-12\">\n        <div class=\"jumbotron text-center\">\n            <h1>Welcome online!</h1>\n            <h2>What would you like to do next?</h2>\n            <div>\n                <hr>\n              <a class=\"btn-primary btn\" [routerLink]=\"['/register']\">Create new user</a> <a class=\"btn-default btn\" [routerLink]=\"['/login']\">Login</a>\n            </div>\n          </div>\n    </div>\n  </div>\n</div>"
 
 /***/ }),
 
@@ -351,7 +354,7 @@ module.exports = module.exports.toString();
 /***/ "../../../../../src/app/components/login/login.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<h1>Login</h1>\n<hr>\n<form (submit)=\"loginSubmit()\">\n  <div class=\"form-group\">\n    <label>Enter Username</label>\n    <input type=\"text\" class=\"form-control\" [(ngModel)]=\"username\" name=\"username\">\n  </div>\n  <div class=\"form-group\">\n    <label>Enter Password</label>\n    <input type=\"password\" class=\"form-control\" [(ngModel)]=\"password\" name=\"password\">\n  </div>\n  <input type=\"submit\" class=\"btn-primary btn \" value=\"Login\">\n</form>\n"
+module.exports = "<h1>Login to chat!</h1>\n<hr>\n<form (submit)=\"loginSubmit()\">\n  <div class=\"form-group\">\n    <label>Enter your username</label>\n    <input type=\"text\" class=\"form-control\" [(ngModel)]=\"username\" name=\"username\">\n  </div>\n  <div class=\"form-group\">\n    <label>Enter your password</label>\n    <input type=\"password\" class=\"form-control\" [(ngModel)]=\"password\" name=\"password\">\n  </div>\n  <input type=\"submit\" class=\"btn-primary btn \" value=\"Login\">\n</form>\n"
 
 /***/ }),
 
@@ -442,7 +445,7 @@ module.exports = module.exports.toString();
 /***/ "../../../../../src/app/components/navbar/navbar.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<nav class=\"navbar navbar-default\">\n  <div class=\"container\">\n    <div class=\"navbar-header\">\n      <button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\" data-target=\"#navbar\" aria-expanded=\"false\" aria-controls=\"navbar\">\n        <span class=\"sr-only\">Toggle navigation</span>\n        <span class=\"icon-bar\"></span>\n        <span class=\"icon-bar\"></span>\n        <span class=\"icon-bar\"></span>\n      </button>\n      <a class=\"navbar-brand\" href=\"#\">MeanApp</a>\n    </div>\n    <div id=\"navbar\" class=\"collapse navbar-collapse\">\n      <ul class=\"nav navbar-nav navbar-left\">\n      <li [routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/']\">Home</a></li>\n    </ul>\n\n      <ul class=\"nav navbar-nav navbar-right\">\n        <li *ngIf=\"!authService.loggedIn()\"[routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/login']\">Login</a></li>\n        <li *ngIf=\"authService.loggedIn()\" [routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/chat']\">Chat</a></li>\n        <li *ngIf=\"!authService.loggedIn()\" [routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/register']\">Register User</a></li>\n        <li *ngIf=\"authService.loggedIn()\"><a (click)=\"onLogoutClick()\" href=\"#\">Logout</a></li>\n      </ul>\n    </div><!--/.nav-collapse -->\n  </div>\n</nav>\n"
+module.exports = "<nav class=\"navbar navbar-default\">\n  <div class=\"container\">\n    <div class=\"row\">\n      <div class=\"col-sm-12\">\n          <div id=\"navbar\" class=\"\">      \n              <ul class=\"nav\">\n                <li [routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/']\">Home</a></li>\n                <li *ngIf=\"!authService.loggedIn()\"[routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/login']\">Login</a></li>\n                <li *ngIf=\"authService.loggedIn()\" [routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/chat']\">Chat</a></li>\n                <li *ngIf=\"!authService.loggedIn()\" [routerLinkActive]=\"['active']\" [routerLinkActiveOptions] = \"{exact:true}\"><a [routerLink]=\"['/register']\">Register User</a></li>\n                <li *ngIf=\"authService.loggedIn()\"><a (click)=\"onLogoutClick()\" href=\"#\">Logout</a></li>\n              </ul>\n            </div>\n      </div>\n    </div>\n    \n  </div>\n</nav>\n"
 
 /***/ }),
 
@@ -803,7 +806,7 @@ var ChatService = (function () {
     ChatService.prototype.getAllChatrooms = function () {
         var _this = this;
         var observableChatrooms = new __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__["Observable"](function (observer) {
-            _this.socket.on('refresh chatrooms', function (refresh) {
+            _this.socket.on('reload rooms', function (refresh) {
                 observer.next(refresh);
             });
             return function () {
